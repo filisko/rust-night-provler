@@ -46,25 +46,67 @@ fn main() {
         fn start(&self) -> String {
             return String::from("Start a Car V");
         }
-    }
+    };
 
+    trait IVehiculoData {}
     #[derive(Debug, Clone)]
     struct Car {
+        //
         engine: Engine,
         color: Color,
         wheels: i16,
     };
+    impl IVehiculoData for Car {}
+    #[derive(Debug, Clone)]
+    struct Bicycle {
+        eletricity: bool,
+    };
+
+    use std::ops::Add;
+    impl Add for Car {
+        type Output = Car;
+
+        fn add(self, other: Car) -> Car {
+            return Car {
+                engine: self.engine,
+                color: self.color,
+                wheels: self.wheels + other.wheels,
+            };
+        }
+    }
+    let c0 = Car {
+        engine: Engine::M,
+        color: Color::White,
+        wheels: 4,
+    };
+
+    let c1 = Car {
+        engine: Engine::M,
+        color: Color::White,
+        wheels: 4,
+    };
+    let sumACars = c0 + c1;
 
     #[derive(Debug, Clone)]
-    struct Slot<T> {
+    struct Slot<T: IVehiculoData> {
         parkingSlot: HashMap<u32, T>,
     }
 
+    pub trait SlotB<T> {
+        fn addVehicle(&self, aVehicle: T) -> ();
+    }
+    impl SlotB<Car> for Slot<Car> {
+        fn addVehicle(&self, aVehicle: Car) -> () {
+            //self.parkingSlot.insert(k: K, v: V)
+        }
+    }
     #[derive(Debug)]
-    pub struct Parking<T> {
+    pub struct Parking<T: IVehiculoData> {
+        // T : Vehicles
         vehicles: Vec<Slot<T>>,
     };
     type ParkingForCars = Parking<Car>;
+
     pub trait ParkingB {
         fn max(&self) -> usize {
             return 100;
@@ -72,12 +114,15 @@ fn main() {
         fn freeSlots(&self) -> usize;
     }
 
+    type ParkingForBicycles = Parking<Bicycle>;
+
     impl ParkingB for ParkingForCars {
         fn freeSlots(&self) -> usize {
             return self.max() - self.vehicles.len();
         }
     }
-    fn prepareData() -> (Car, Car, Car) {
+
+    pub fn prepareData<T: IVehiculoData>() -> (Car, Car, Car) {
         let aDefaultCar: Car = Car {
             engine: Engine::M,
             color: Color::White,
@@ -102,9 +147,12 @@ fn main() {
         };
         return (aSmallCar, aMediumCar, aBigCar);
     }
-    fn createSlotForCar<T: VehicleB>(vehicle: T) -> Slot<T> {
+
+    fn createSlotForCar<T: IVehiculoData>(vehicle: T) -> Slot<T> {
+        const MIN: u32 = 1;
+        const MAX: u32 = 100;
         fn randomNumber() -> u32 {
-            return rand::thread_rng().gen_range(1, 100);
+            return rand::thread_rng().gen_range(MIN, MAX);
         }
 
         let mut slotForAVehicle = HashMap::new();
@@ -115,7 +163,7 @@ fn main() {
     }
 
     let aSmallParking: ParkingForCars = {
-        let (aSmallCar, aMediumCar, aBigCar) = prepareData();
+        let (aSmallCar, aMediumCar, aBigCar) = prepareData::<Car>();
         ParkingForCars {
             vehicles: vec![
                 createSlotForCar(aSmallCar),
